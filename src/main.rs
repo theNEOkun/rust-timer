@@ -22,6 +22,13 @@ pub enum TimeResult {
     Help,
 }
 
+enum Show {
+    Small,
+    Big,
+    None
+}
+
+//Main function, takes care of reading the arguments, the config, and sending it forward
 fn main() {
     let mut args: Vec<String> = env::args().collect();
     if args.len() == 1 {
@@ -39,12 +46,17 @@ fn main() {
     }
 }
 
+//Parses the arguments taken from the commandline
 fn choices(args: &mut Vec<String>, beep_pos: PathBuf) {
     let show = if args[0].contains("s") {
         let pos = args[0].find("s").unwrap();
         args[0].replace_range(pos..pos+1, "");
-        true
-    } else { false };
+        Show::Small
+    } else if args[0].contains("S") { 
+        Show::Big
+    } else {
+        Show::None
+    };
     if args[0].contains("m") {
         let pos = args[0].find("m").unwrap();
         args[0].replace_range(pos..pos+1, "");
@@ -69,13 +81,17 @@ fn choices(args: &mut Vec<String>, beep_pos: PathBuf) {
 
     match duration {
         TimeResult::Time(time) => {
-            if show {
-                for each in 0..time.num_seconds() {
-                    print_time(time.num_seconds()-each);
-                    thread::sleep(Duration::seconds(1).to_std().unwrap());
+            match show {
+                Show::Small => {
+                    for each in 0..time.num_seconds() {
+                        print_time(time.num_seconds()-each);
+                        thread::sleep(Duration::seconds(1).to_std().unwrap());
+                    }
                 }
-            } else {
-                thread::sleep(time.to_std().unwrap())
+                Show::Big => {
+
+                }
+                Show::None => thread::sleep(time.to_std().unwrap())
             }
             play_sound(beep_pos).expect("Something went wrong");
         }
