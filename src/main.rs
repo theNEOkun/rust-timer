@@ -132,6 +132,7 @@ fn help_text() {
     println!("-a --alarm : Set an alarm");
     println!("-[f]m -m : Set a message");
     println!("-h --help : See this text");
+    println!("adding s to either -t or -a displays the countdown");
 }
 
 fn timer(args: &mut Vec<String>) -> TimeResult {
