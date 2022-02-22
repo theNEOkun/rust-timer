@@ -70,7 +70,10 @@ fn choices(args: &mut Vec<String>, beep_pos: PathBuf) {
     match duration {
         TimeResult::Time(time) => {
             if show {
-                print_time(time);
+                for each in 0..time.num_seconds() {
+                    print_time(time.num_seconds()-each);
+                    thread::sleep(Duration::seconds(1).to_std().unwrap());
+                }
             } else {
                 thread::sleep(time.to_std().unwrap())
             }
@@ -98,8 +101,13 @@ fn extra_choices(args: &mut Vec<String>) {
     }
 }
 
-fn print_time(time: Duration) {
+fn print_time(time_seconds: i64) {
+    print!("{esc}c", esc = 27 as char);
+    let h = time_seconds / (60 * 60);
+    let m = time_seconds / 60;
+    let s = time_seconds % 60;
 
+    println!("{h}:{m}:{s}");
 }
 
 fn help_text() {
