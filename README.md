@@ -1,15 +1,15 @@
-#Timer
+# Timer
 
 This is a simple timer written in rust
 
 It takes command-line arguments to handle, and was made simply for training-purposes
 
-##Instructions
+## Instructions
 
 Download and compile the program, and put it in any folder available in the path. A config-folder will be generated for you
 and you must there specify a sound-file to use.
 
-###Flags
+### Flags
 
 The -t flag specifies a timer, and takes arguments in the form of "number" with either s, m or h after, to indicate
 seconds, minutes or hours.
