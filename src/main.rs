@@ -46,22 +46,8 @@ fn main() {
 
 //Parses the arguments taken from the commandline
 fn choices(args: &mut Vec<String>, beep_pos: PathBuf) {
-    let show = if args[0].contains("s") {
-        let pos = args[0].find("s").unwrap();
-        args[0].replace_range(pos..pos+1, "");
-        Show::Small
-    } else if args[0].contains("S") { 
-        let pos = args[0].find("S").unwrap();
-        args[0].replace_range(pos..pos+1, "");
-        Show::Big
-    } else {
-        Show::None
-    };
-    if args[0].contains("m") {
-        let pos = args[0].find("m").unwrap();
-        args[0].replace_range(pos..pos+1, "");
-        args.insert(args.len() - 1, "-m".into());
-    } 
+    let show = show_handle(args);
+    message_handle(args);
     let duration = match &args[0][..] {
         "-t" | "--timer" => {
             args.remove(0);
@@ -84,6 +70,30 @@ fn choices(args: &mut Vec<String>, beep_pos: PathBuf) {
     extra_choices(args);
 }
 
+//Handles the show-flag
+fn show_handle(args: &mut Vec<String>) -> Show {
+    return if args[0].contains("s") {
+        let pos = args[0].find("s").unwrap();
+        args[0].replace_range(pos..pos+1, "");
+        Show::Small
+    } else if args[0].contains("S") { 
+        let pos = args[0].find("S").unwrap();
+        args[0].replace_range(pos..pos+1, "");
+        Show::Big
+    } else {
+        Show::None
+    }
+}
+
+//Handles the message-flag
+fn message_handle(args: &mut Vec<String>) {
+    if args[0].contains("m") {
+        let pos = args[0].find("m").unwrap();
+        args[0].replace_range(pos..pos+1, "");
+        args.insert(args.len() - 1, "-m".into());
+    }
+}
+
 struct Console<'a> {
     handle: StdoutLock<'a>
 }
@@ -92,21 +102,19 @@ fn time_handle(duration: TimeResult, show: Show, beep_pos: PathBuf) {
     match duration {
         TimeResult::Time(time) => {
             let stdout = io::stdout();
-            let mut console = Console {
-                handle: stdout.lock()
-            };
+            let mut handle = stdout.lock();
             match show {
                 Show::Small => {
                     let tim = Instant::now();
                     for each in (0..time.num_seconds()).rev() {
-                        print_time(each, &mut console);
+                        print_time(each, &mut handle);
                         thread::sleep(Duration::from_micros(999880));
                     }
-                    writeln!(console.handle, "{:?}", tim.elapsed());
+                    writeln!(handle, "{:?}", tim.elapsed());
                 }
                 Show::Big => {
                     for each in (0..time.num_seconds()).rev() {
-                        print_big_time(each, &mut console);
+                        print_big_time(each, &mut handle);
                         thread::sleep(Duration::from_secs(1));
                     }
                 }
@@ -125,6 +133,7 @@ fn time_handle(duration: TimeResult, show: Show, beep_pos: PathBuf) {
     }
 }
 
+//Handles the output of the message-flag
 fn extra_choices(args: &mut Vec<String>) {
     if args.len() <= 0 {
         return;
@@ -140,13 +149,13 @@ fn extra_choices(args: &mut Vec<String>) {
     }
 }
 
-fn print_time(time_seconds: i64, console: &mut Console) {
+fn print_time(time_seconds: i64, handle: &mut StdoutLock) {
     let (h, m, s) = get_time(time_seconds);
 
-    writeln!(console.handle, "{esc}c{h}:{m}:{s}", esc = 27 as char);
+    writeln!(handle, "{esc}c{h}:{m}:{s}", esc = 27 as char).expect("Time couldn't be displayed");
 }
 
-fn print_big_time(time_seconds: i64, console: &mut Console) {
+fn print_big_time(time_seconds: i64, handle: &mut StdoutLock) {
     print!("{esc}c", esc = 27 as char);
     let (h, m, s) = get_time(time_seconds);
 }
