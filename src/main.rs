@@ -1,4 +1,4 @@
-use std::{path::PathBuf, env, thread, time::{Duration, Instant}, io::{stdout, Read}, fs::{self, File}, collections::HashMap};
+use std::{env, thread, time::{Duration, Instant}, io::stdout, fs, collections::HashMap};
 
 mod timer;
 use timer::Timer;
@@ -15,7 +15,7 @@ mod sound;
 use sound::play_sound;
 
 mod console;
-use console::{help_text, take_time};
+use console::help_text;
 
 pub enum TimeResult {
     Time(chrono::Duration),
@@ -113,12 +113,10 @@ fn time_handle(duration: TimeResult, show: Show, cfg: MyConfig) {
                 }
                 Show::Big => {
                     let art = get_art(cfg.digit_pos);
-                    take_time(move || {
-                        for each in (0..time.num_seconds()).rev() {
-                            console.write_ascii(print_big_time(each, &art));
+                    for each in (0..time.num_seconds()).rev() {
+                        console.write_ascii(print_big_time(each, &art));
                         thread::sleep(Duration::from_micros(999780));
-                        }
-                    });
+                    }
                 }
                 Show::None => {
                     let tim = Instant::now();
@@ -172,27 +170,22 @@ fn print_big_time(time_seconds: i64, ascii_art: &HashMap<String, String>) -> Vec
 }
 
 fn get_art(digit_pos: String) -> HashMap<String, String> {
-    let mut big_vec = HashMap::from([
-        ("0".into(), "".into()),
-        ("1".into(), "".into()),
-        ("2".into(), "".into()),
-        ("3".into(), "".into()),
-        ("4".into(), "".into()),
-        ("5".into(), "".into()),
-        ("6".into(), "".into()),
-        ("7".into(), "".into()),
-        ("8".into(), "".into()),
-        ("9".into(), "".into()),
-        (":".into(), "".into()),
-    ]);
+    let mut big_vec = HashMap::new();
+
+    for each in 0..10 {
+        big_vec.insert(format!("{each}"), "".into());
+    }
+
+    big_vec.insert(":".into(), "".into());
     for each in big_vec.clone().keys() {
+        println!("{}", digit_pos.clone() + &format!("/{each}.txt")[..]);
         *big_vec.get_mut(each).unwrap() = fs::read_to_string(digit_pos.clone() + &format!("/{each}.txt")[..]).expect("");
     }
     big_vec
 }
 
 fn get_time(time_seconds: i64) -> (i64, i64, i64) {
-    (time_seconds / (60 * 60), time_seconds / 60, time_seconds % 60)
+    (time_seconds / (60 * 60), (time_seconds / 60) % 60, time_seconds % 60)
 }
 
 fn timer(args: &mut Vec<String>) -> TimeResult {

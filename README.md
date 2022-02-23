@@ -26,3 +26,7 @@ timer rings.
 
 At the moment, it adds about .000052/seconds, which over 24h adds up to around 4 minutes.
 Work is being done to lower this, but keep it in mind.
+
+## Thanks
+
+Big and small output inspired by AntonMarklund00/rust-countdown-timer
