@@ -1,4 +1,4 @@
-use std::{path::PathBuf, env, thread};
+use std::{path::PathBuf, env, thread, time::{self, Instant}, io::{self, Write, StdoutLock}};
 
 use chrono::Duration;
 
@@ -53,6 +53,8 @@ fn choices(args: &mut Vec<String>, beep_pos: PathBuf) {
         args[0].replace_range(pos..pos+1, "");
         Show::Small
     } else if args[0].contains("S") { 
+        let pos = args[0].find("S").unwrap();
+        args[0].replace_range(pos..pos+1, "");
         Show::Big
     } else {
         Show::None
@@ -79,27 +81,50 @@ fn choices(args: &mut Vec<String>, beep_pos: PathBuf) {
         }
     };
 
+    time_handle(duration, show, beep_pos);
+
+    extra_choices(args);
+}
+
+struct Console<'a> {
+    handle: StdoutLock<'a>
+}
+
+fn time_handle(duration: TimeResult, show: Show, beep_pos: PathBuf) {
     match duration {
         TimeResult::Time(time) => {
+            let stdout = io::stdout();
+            let mut console = Console {
+                handle: stdout.lock()
+            };
             match show {
                 Show::Small => {
-                    for each in 0..time.num_seconds() {
-                        print_time(time.num_seconds()-each);
-                        thread::sleep(Duration::seconds(1).to_std().unwrap());
+                    let tim = Instant::now();
+                    for each in (0..time.num_seconds()).rev() {
+                        print_time(each, &mut console);
+                        thread::sleep(time::Duration::from_secs(1));
                     }
+                    println!("{:?}", tim.elapsed());
                 }
                 Show::Big => {
-
+                    for each in (0..time.num_seconds()).rev() {
+                        print_big_time(each, &mut console);
+                        thread::sleep(time::Duration::from_secs(1));
+                    }
                 }
-                Show::None => thread::sleep(time.to_std().unwrap())
+                    Show::None => {
+
+                    let tim = Instant::now();
+                    thread::sleep(time.to_std().unwrap());
+                    println!("{:?}", tim.elapsed());
+                    
+            }
             }
             play_sound(beep_pos).expect("Something went wrong");
         }
         TimeResult::Err => panic!("Something went wrong"),
         TimeResult::Help => help_text()
     }
-
-    extra_choices(args);
 }
 
 fn extra_choices(args: &mut Vec<String>) {
@@ -117,13 +142,19 @@ fn extra_choices(args: &mut Vec<String>) {
     }
 }
 
-fn print_time(time_seconds: i64) {
-    print!("{esc}c", esc = 27 as char);
-    let h = time_seconds / (60 * 60);
-    let m = time_seconds / 60;
-    let s = time_seconds % 60;
+fn print_time(time_seconds: i64, console: &mut Console) {
+    let (h, m, s) = get_time(time_seconds);
 
-    println!("{h}:{m}:{s}");
+    writeln!(console.handle, "{esc}c{h}:{m}:{s}", esc = 27 as char);
+}
+
+fn print_big_time(time_seconds: i64, console: &mut Console) {
+    print!("{esc}c", esc = 27 as char);
+    let (h, m, s) = get_time(time_seconds);
+}
+
+fn get_time(time_seconds: i64) -> (i64, i64, i64) {
+    (time_seconds / (60 * 60), time_seconds / 60, time_seconds % 60)
 }
 
 fn help_text() {

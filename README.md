@@ -21,3 +21,8 @@ the time left, until the timer rings.
 
 The -m flag can alternatively be added next to last, to indicate that the next argument is a message to be displayed when the 
 timer rings.
+
+### Regarding the s flag
+
+At the moment, it adds about .007/minute, which over 24h adds up to around 9 minutes.
+Work is being done to lower this, but keep it in mind.
