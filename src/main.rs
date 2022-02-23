@@ -1,4 +1,4 @@
-use std::{path::PathBuf, env, thread, time::{Duration, Instant}, io::{self, Write, StdoutLock}};
+use std::{path::PathBuf, env, thread, time::{Duration, Instant}, io::stdout};
 
 mod timer;
 use timer::Timer;
@@ -13,6 +13,9 @@ mod errors;
 
 mod sound;
 use sound::play_sound;
+
+mod console;
+use console::{Console, help_text, take_time};
 
 pub enum TimeResult {
     Time(chrono::Duration),
@@ -97,26 +100,27 @@ fn message_handle(args: &mut Vec<String>) {
 fn time_handle(duration: TimeResult, show: Show, beep_pos: PathBuf) {
     match duration {
         TimeResult::Time(time) => {
-            let stdout = io::stdout();
-            let mut handle = stdout.lock();
+            let stdout = stdout();
+            let mut console = console::Console::new(stdout);
             match show {
                 Show::Small => {
-
-                    let tim = Instant::now();
+                    //Approximately 0.0000017/s in fault
+                    take_time(move || {
                     for each in (0..time.num_seconds()).rev() {
-                        print_time(each, &mut handle);
+                        let (h, m, s) = get_time(each);
+                        console.write_line(format!("{h}:{m}:{s}"));
                         thread::sleep(Duration::from_micros(999780));
                     }
-                    println!("{:?}", tim.elapsed());
+                    
+                })
                 }
                 Show::Big => {
                     for each in (0..time.num_seconds()).rev() {
-                        print_big_time(each, &mut handle);
+                        console.write_ascii(print_big_time(each));
                         thread::sleep(Duration::from_secs(1));
                     }
                 }
                 Show::None => {
-
                     let tim = Instant::now();
                     thread::sleep(time.to_std().unwrap());
                     println!("{:?}", tim.elapsed());
@@ -146,28 +150,21 @@ fn extra_choices(args: &mut Vec<String>) {
     }
 }
 
-fn print_time(time_seconds: i64, handle: &mut StdoutLock) {
+fn print_big_time(time_seconds: i64) -> Vec<String> {
+    let mut time_str_vec: Vec<String> = Vec::new();
     let (h, m, s) = get_time(time_seconds);
 
-    writeln!(handle, "{esc}c{h}:{m}:{s}", esc = 27 as char).expect("Time couldn't be displayed");
-}
+    for digit in format!("{h}:{m}:{s}").to_string().split("") {
+        if digit =="" { continue }
+    }
 
-fn print_big_time(time_seconds: i64, handle: &mut StdoutLock) {
     print!("{esc}c", esc = 27 as char);
-    let (h, m, s) = get_time(time_seconds);
+
+    time_str_vec
 }
 
 fn get_time(time_seconds: i64) -> (i64, i64, i64) {
     (time_seconds / (60 * 60), time_seconds / 60, time_seconds % 60)
-}
-
-fn help_text() {
-    println!("The argument flags are: ");
-    println!("-t --timer : Set a timer");
-    println!("-a --alarm : Set an alarm");
-    println!("-[f]m -m : Set a message");
-    println!("-h --help : See this text");
-    println!("adding s to either -t or -a displays the countdown");
 }
 
 fn timer(args: &mut Vec<String>) -> TimeResult {
