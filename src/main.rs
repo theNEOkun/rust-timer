@@ -94,10 +94,6 @@ fn message_handle(args: &mut Vec<String>) {
     }
 }
 
-struct Console<'a> {
-    handle: StdoutLock<'a>
-}
-
 fn time_handle(duration: TimeResult, show: Show, beep_pos: PathBuf) {
     match duration {
         TimeResult::Time(time) => {
@@ -105,12 +101,13 @@ fn time_handle(duration: TimeResult, show: Show, beep_pos: PathBuf) {
             let mut handle = stdout.lock();
             match show {
                 Show::Small => {
+
                     let tim = Instant::now();
                     for each in (0..time.num_seconds()).rev() {
                         print_time(each, &mut handle);
-                        thread::sleep(Duration::from_micros(999880));
+                        thread::sleep(Duration::from_micros(999780));
                     }
-                    writeln!(handle, "{:?}", tim.elapsed());
+                    println!("{:?}", tim.elapsed());
                 }
                 Show::Big => {
                     for each in (0..time.num_seconds()).rev() {
