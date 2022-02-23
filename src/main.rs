@@ -1,10 +1,10 @@
-use std::{path::PathBuf, env, thread, time::{Duration, Instant}, io::stdout};
+use std::{path::PathBuf, env, thread, time::{Duration, Instant}, io::{stdout, Read}, fs::{self, File}, collections::HashMap};
 
 mod timer;
 use timer::Timer;
 
 mod configs;
-use configs::load_config;
+use configs::{load_config, MyConfig};
 
 mod alarm;
 use alarm::Alarm;
@@ -15,7 +15,7 @@ mod sound;
 use sound::play_sound;
 
 mod console;
-use console::{Console, help_text, take_time};
+use console::{help_text, take_time};
 
 pub enum TimeResult {
     Time(chrono::Duration),
@@ -39,7 +39,7 @@ fn main() {
     args.remove(0);
     match load_config() {
         Ok(cfg) => {
-            choices(&mut args, cfg.beep_pos);
+            choices(&mut args, cfg);
         }
         Err(_) => {
             panic!("No configs could be loaded");
@@ -48,7 +48,7 @@ fn main() {
 }
 
 //Parses the arguments taken from the commandline
-fn choices(args: &mut Vec<String>, beep_pos: PathBuf) {
+fn choices(args: &mut Vec<String>, cfg: MyConfig) {
     let show = show_handle(args);
     message_handle(args);
     let duration = match &args[0][..] {
@@ -68,7 +68,7 @@ fn choices(args: &mut Vec<String>, beep_pos: PathBuf) {
         }
     };
 
-    time_handle(duration, show, beep_pos);
+    time_handle(duration, show, cfg);
 
     extra_choices(args);
 }
@@ -97,7 +97,7 @@ fn message_handle(args: &mut Vec<String>) {
     }
 }
 
-fn time_handle(duration: TimeResult, show: Show, beep_pos: PathBuf) {
+fn time_handle(duration: TimeResult, show: Show, cfg: MyConfig) {
     match duration {
         TimeResult::Time(time) => {
             let stdout = stdout();
@@ -105,20 +105,20 @@ fn time_handle(duration: TimeResult, show: Show, beep_pos: PathBuf) {
             match show {
                 Show::Small => {
                     //Approximately 0.0000017/s in fault
-                    take_time(move || {
                     for each in (0..time.num_seconds()).rev() {
                         let (h, m, s) = get_time(each);
                         console.write_line(format!("{h}:{m}:{s}"));
                         thread::sleep(Duration::from_micros(999780));
                     }
-                    
-                })
                 }
                 Show::Big => {
-                    for each in (0..time.num_seconds()).rev() {
-                        console.write_ascii(print_big_time(each));
-                        thread::sleep(Duration::from_secs(1));
-                    }
+                    let art = get_art(cfg.digit_pos);
+                    take_time(move || {
+                        for each in (0..time.num_seconds()).rev() {
+                            console.write_ascii(print_big_time(each, &art));
+                        thread::sleep(Duration::from_micros(999780));
+                        }
+                    });
                 }
                 Show::None => {
                     let tim = Instant::now();
@@ -127,7 +127,7 @@ fn time_handle(duration: TimeResult, show: Show, beep_pos: PathBuf) {
 
                 }
             }
-            play_sound(beep_pos).expect("Something went wrong");
+            play_sound(cfg.beep_pos).expect("Something went wrong");
         }
         TimeResult::Err => panic!("Something went wrong"),
         TimeResult::Help => help_text()
@@ -150,17 +150,45 @@ fn extra_choices(args: &mut Vec<String>) {
     }
 }
 
-fn print_big_time(time_seconds: i64) -> Vec<String> {
+fn print_big_time(time_seconds: i64, ascii_art: &HashMap<String, String>) -> Vec<String> {
     let mut time_str_vec: Vec<String> = Vec::new();
     let (h, m, s) = get_time(time_seconds);
 
     for digit in format!("{h}:{m}:{s}").to_string().split("") {
         if digit =="" { continue }
+
+        let big_string: String = ascii_art[digit].clone();
+
+        if time_str_vec.len() < 1 {
+            time_str_vec = vec!["".into(); big_string.split("\n").count()];
+        }
+
+        for (j, y) in big_string.split("\n").enumerate() {
+            time_str_vec[j] = time_str_vec[j].to_string() + y + &" ".repeat(10 - y.len());
+        }
     }
 
-    print!("{esc}c", esc = 27 as char);
-
     time_str_vec
+}
+
+fn get_art(digit_pos: String) -> HashMap<String, String> {
+    let mut big_vec = HashMap::from([
+        ("0".into(), "".into()),
+        ("1".into(), "".into()),
+        ("2".into(), "".into()),
+        ("3".into(), "".into()),
+        ("4".into(), "".into()),
+        ("5".into(), "".into()),
+        ("6".into(), "".into()),
+        ("7".into(), "".into()),
+        ("8".into(), "".into()),
+        ("9".into(), "".into()),
+        (":".into(), "".into()),
+    ]);
+    for each in big_vec.clone().keys() {
+        *big_vec.get_mut(each).unwrap() = fs::read_to_string(digit_pos.clone() + &format!("/{each}.txt")[..]).expect("");
+    }
+    big_vec
 }
 
 fn get_time(time_seconds: i64) -> (i64, i64, i64) {

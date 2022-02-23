@@ -9,9 +9,8 @@ use std::path::PathBuf;
 
 #[derive(Serialize, Deserialize)]
 pub struct MyConfig {
-    pub version: u8,
-    pub api_key: String,
     pub beep_pos: PathBuf,
+    pub digit_pos: String,
 }
 
 pub fn load_config() -> Result<MyConfig, confy::ConfyError> {
@@ -24,10 +23,11 @@ impl ::std::default::Default for MyConfig {
         home.push(".config");
         home.push("timer");
         home.push("beep.mp3");
+        let mut digits = home::home_dir().unwrap().into_os_string().into_string().expect("");
+        digits += "/.config/timer/digits/";
         Self {
-            version: 0,
-            api_key: "timer".into(),
-            beep_pos: home
+            beep_pos: home,
+            digit_pos: digits,
         }
     }
 }
