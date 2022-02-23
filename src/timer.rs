@@ -25,7 +25,7 @@ impl Timer {
         let test_regex = Regex::new("[0-9]+[smh]").unwrap();
         while args.len() > 0 {
             if args[0].contains("-") || !test_regex.is_match(&args[0][..]) {
-                return TimeResult::Err;
+                break;
             }
             match self.get_time(&args.remove(0)) {
                 Ok(time) => {

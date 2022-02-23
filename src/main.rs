@@ -49,8 +49,9 @@ fn main() {
 
 //Parses the arguments taken from the commandline
 fn choices(args: &mut Vec<String>, cfg: MyConfig) {
-    let show = show_handle(args);
     message_handle(args);
+    let show = show_handle(args);
+    println!("{args:?}");
     let duration = match &args[0][..] {
         "-t" | "--timer" => {
             args.remove(0);
