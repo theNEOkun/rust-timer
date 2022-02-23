@@ -24,5 +24,5 @@ timer rings.
 
 ### Regarding the s flag
 
-At the moment, it adds about .007/minute, which over 24h adds up to around 9 minutes.
+At the moment, it adds about .000052/seconds, which over 24h adds up to around 4 minutes.
 Work is being done to lower this, but keep it in mind.

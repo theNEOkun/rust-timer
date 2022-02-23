@@ -1,6 +1,4 @@
-use std::{path::PathBuf, env, thread, time::{self, Instant}, io::{self, Write, StdoutLock}};
-
-use chrono::Duration;
+use std::{path::PathBuf, env, thread, time::{Duration, Instant}, io::{self, Write, StdoutLock}};
 
 mod timer;
 use timer::Timer;
@@ -102,23 +100,23 @@ fn time_handle(duration: TimeResult, show: Show, beep_pos: PathBuf) {
                     let tim = Instant::now();
                     for each in (0..time.num_seconds()).rev() {
                         print_time(each, &mut console);
-                        thread::sleep(time::Duration::from_secs(1));
+                        thread::sleep(Duration::from_micros(999880));
                     }
-                    println!("{:?}", tim.elapsed());
+                    writeln!(console.handle, "{:?}", tim.elapsed());
                 }
                 Show::Big => {
                     for each in (0..time.num_seconds()).rev() {
                         print_big_time(each, &mut console);
-                        thread::sleep(time::Duration::from_secs(1));
+                        thread::sleep(Duration::from_secs(1));
                     }
                 }
-                    Show::None => {
+                Show::None => {
 
                     let tim = Instant::now();
                     thread::sleep(time.to_std().unwrap());
                     println!("{:?}", tim.elapsed());
-                    
-            }
+
+                }
             }
             play_sound(beep_pos).expect("Something went wrong");
         }
