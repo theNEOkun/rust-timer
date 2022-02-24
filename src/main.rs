@@ -101,10 +101,10 @@ fn message_handle(args: &mut Vec<String>) {
 fn time_handle(duration: TimeResult, show: Show, cfg: MyConfig) {
     match duration {
         TimeResult::Time(time) => {
-            let stdout = stdout();
-            let mut console = console::Console::new(stdout);
             match show {
                 Show::Small => {
+                    let stdout = stdout();
+                    let mut console = console::Console::new(stdout);
                     //Approximately 0.0000017/s in fault
                     for each in (0..time.num_seconds()).rev() {
                         let (h, m, s) = get_time(each);
@@ -113,6 +113,8 @@ fn time_handle(duration: TimeResult, show: Show, cfg: MyConfig) {
                     }
                 }
                 Show::Big => {
+                    let stdout = stdout();
+                    let mut console = console::Console::new(stdout);
                     let art = get_art(cfg.digit_pos);
                     for each in (0..time.num_seconds()).rev() {
                         console.write_ascii(print_big_time(each, &art));
@@ -149,6 +151,7 @@ fn extra_choices(args: &mut Vec<String>) {
     }
 }
 
+//Code gotten from AntonMarklund00/countdown-timer-rust
 fn print_big_time(time_seconds: i64, ascii_art: &HashMap<String, String>) -> Vec<String> {
     let mut time_str_vec: Vec<String> = Vec::new();
     let (h, m, s) = get_time(time_seconds);
