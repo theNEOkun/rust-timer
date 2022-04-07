@@ -210,4 +210,13 @@ fn alarm(args: &mut Vec<String>) -> TimeResult {
     alarm.set_alarm(args)
 }
 
+#[cfg(test)]
+mod main_tests {
+    use super::*;
 
+    #[test]
+    fn test_get_time() {
+        assert_eq!((16, 0, 0), get_time(57600));
+        assert_ne!((16, 960, 0), get_time(57600));
+    }
+}

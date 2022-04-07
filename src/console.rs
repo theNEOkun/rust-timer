@@ -45,7 +45,7 @@ pub fn help_text() {
 }
 
 //Simply used to time it, and is not really intended for active use
-pub fn take_time<F>(mut callback: F)
+pub fn _take_time<F>(mut callback: F)
 where
     F: FnMut(),
 {
