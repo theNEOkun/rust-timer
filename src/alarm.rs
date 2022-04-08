@@ -1,13 +1,7 @@
-use chrono::{
-    self,
-    NaiveTime, NaiveDateTime, Duration,
-};
+use chrono::{self, Duration, NaiveDateTime, NaiveTime};
 use regex::Regex;
 
-use super::{
-    errors::*,
-    TimeResult,
-};
+use super::{errors::*, TimeResult};
 
 pub struct Alarm {
     time: u64,
@@ -21,9 +15,7 @@ impl Alarm {
     pub fn set_alarm(&mut self, args: &mut Vec<String>) -> TimeResult {
         if let Ok(times) = self.check_time(&args.remove(0)) {
             match self.parse_time(times) {
-                Ok(_) => {
-                    TimeResult::Time(Duration::seconds(self.time as i64))
-                }
+                Ok(_) => TimeResult::Time(Duration::seconds(self.time as i64)),
                 Err(_) => {
                     panic!("Could not parse time")
                 }
@@ -34,9 +26,14 @@ impl Alarm {
     }
 
     fn check_time(&mut self, time: &String) -> TimeParseResult<Vec<String>> {
-        if Regex::new("[0-9]|[0-9]1[0-9]2[0-3]:[0-5][0-9]").unwrap().is_match(&time[..]) || 
-            Regex::new("[0-9]|[0-9]1[0-9]2[0-3]:[0-5][0-9]:[0-5][0-9]").unwrap().is_match(&time[..]) {
-                return Ok(time.split(":").map(|s| s.into()).collect());
+        if Regex::new("[0-9]|[0-9]1[0-9]2[0-3]:[0-5][0-9]")
+            .unwrap()
+            .is_match(&time[..])
+            || Regex::new("[0-9]|[0-9]1[0-9]2[0-3]:[0-5][0-9]:[0-5][0-9]")
+                .unwrap()
+                .is_match(&time[..])
+        {
+            return Ok(time.split(":").map(|s| s.into()).collect());
         }
         Err(ParseError)
     }
@@ -47,13 +44,13 @@ impl Alarm {
             let full_time = get_naive_time(&time[0][..], &time[1][..], "0", now);
             let durr = find_diff(full_time, now);
             self.time += durr.num_seconds() as u64;
-            return Ok(true)
+            return Ok(true);
         }
         if time.len() == 3 {
             let full_time = get_naive_time(&time[0][..], &time[1][..], &time[2][..], now);
             let durr = find_diff(full_time, now);
             self.time += durr.num_seconds() as u64;
-            return Ok(true)
+            return Ok(true);
         }
         Ok(true)
     }
@@ -69,18 +66,19 @@ fn parse_time(time: &str) -> u32 {
 
 fn find_diff(time: NaiveDateTime, now: NaiveDateTime) -> chrono::Duration {
     if time < now {
-        return now - time
+        return now - time;
     }
-    return time - now
+    return time - now;
 }
 
 fn get_naive_time(hours: &str, minutes: &str, seconds: &str, now: NaiveDateTime) -> NaiveDateTime {
     let time = NaiveTime::from_hms(parse_time(hours), parse_time(minutes), parse_time(seconds));
-    let date = now.date() + if time < now.time() {
-        chrono::Duration::days(1)
-    } else {
-        chrono::Duration::days(0)
-    };
+    let date = now.date()
+        + if time < now.time() {
+            chrono::Duration::days(1)
+        } else {
+            chrono::Duration::days(0)
+        };
     NaiveDateTime::new(date, time)
 }
 

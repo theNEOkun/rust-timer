@@ -1,5 +1,3 @@
-
-
 pub type CountResult<T> = std::result::Result<T, CountError>;
 
 #[derive(Debug, Clone)]
@@ -14,4 +12,3 @@ pub type TimeParseResult<T> = std::result::Result<T, ParseError>;
 
 #[derive(Debug, Clone)]
 pub struct ParseError;
-

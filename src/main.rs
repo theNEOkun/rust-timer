@@ -1,21 +1,23 @@
-use std::{env, thread, time::{Duration, Instant}, io::stdout, fs, collections::HashMap};
-
-mod timer;
-use timer::Timer;
-
-mod configs;
-use configs::{load_config, MyConfig};
+use std::{
+    collections::HashMap,
+    env, fs,
+    io::stdout,
+    thread,
+    time::{Duration, Instant},
+};
 
 mod alarm;
-use alarm::Alarm;
-
-mod errors;
-
-mod sound;
-use sound::play_sound;
-
+mod configs;
 mod console;
+mod errors;
+mod sound;
+mod timer;
+
+use alarm::Alarm;
+use configs::{load_config, MyConfig};
 use console::help_text;
+use sound::play_sound;
+use timer::Timer;
 
 pub enum TimeResult {
     Time(chrono::Duration),
@@ -26,7 +28,7 @@ pub enum TimeResult {
 enum Show {
     Small,
     Big,
-    None
+    None,
 }
 
 //Main function, takes care of reading the arguments, the config, and sending it forward
@@ -61,12 +63,8 @@ fn choices(args: &mut Vec<String>, cfg: MyConfig) {
             args.remove(0);
             alarm(args)
         }
-        "-h" | "[-]{2}help" => {
-            TimeResult::Help
-        }
-        _ => {
-            TimeResult::Help
-        }
+        "-h" | "[-]{2}help" => TimeResult::Help,
+        _ => TimeResult::Help,
     };
 
     time_handle(duration, show, cfg);
@@ -78,22 +76,22 @@ fn choices(args: &mut Vec<String>, cfg: MyConfig) {
 fn show_handle(args: &mut Vec<String>) -> Show {
     return if args[0].contains("s") {
         let pos = args[0].find("s").unwrap();
-        args[0].replace_range(pos..pos+1, "");
+        args[0].replace_range(pos..pos + 1, "");
         Show::Small
-    } else if args[0].contains("S") { 
+    } else if args[0].contains("S") {
         let pos = args[0].find("S").unwrap();
-        args[0].replace_range(pos..pos+1, "");
+        args[0].replace_range(pos..pos + 1, "");
         Show::Big
     } else {
         Show::None
-    }
+    };
 }
 
 //Handles the message-flag
 fn message_handle(args: &mut Vec<String>) {
     if args[0].contains("m") {
         let pos = args[0].find("m").unwrap();
-        args[0].replace_range(pos..pos+1, "");
+        args[0].replace_range(pos..pos + 1, "");
         args.insert(args.len() - 1, "-m".into());
     }
 }
@@ -125,13 +123,12 @@ fn time_handle(duration: TimeResult, show: Show, cfg: MyConfig) {
                     let tim = Instant::now();
                     thread::sleep(time.to_std().unwrap());
                     println!("{:?}", tim.elapsed());
-
                 }
             }
             play_sound(cfg.beep_pos).expect("Something went wrong");
         }
         TimeResult::Err => panic!("Something went wrong"),
-        TimeResult::Help => help_text()
+        TimeResult::Help => help_text(),
     }
 }
 
@@ -157,7 +154,9 @@ fn print_big_time(time_seconds: i64, ascii_art: &HashMap<String, String>) -> Vec
     let (h, m, s) = get_time(time_seconds);
 
     for digit in format!("{h}:{m}:{s}").to_string().split("") {
-        if digit =="" { continue }
+        if digit == "" {
+            continue;
+        }
 
         let big_string: String = ascii_art[digit].clone();
 
@@ -183,13 +182,18 @@ fn get_art(digit_pos: String) -> HashMap<String, String> {
     big_vec.insert(":".into(), "".into());
     for each in big_vec.clone().keys() {
         println!("{}", digit_pos.clone() + &format!("/{each}.txt")[..]);
-        *big_vec.get_mut(each).unwrap() = fs::read_to_string(digit_pos.clone() + &format!("/{each}.txt")[..]).expect("");
+        *big_vec.get_mut(each).unwrap() =
+            fs::read_to_string(digit_pos.clone() + &format!("/{each}.txt")[..]).expect("");
     }
     big_vec
 }
 
 fn get_time(time_seconds: i64) -> (i64, i64, i64) {
-    (time_seconds / (60 * 60), (time_seconds / 60) % 60, time_seconds % 60)
+    (
+        time_seconds / (60 * 60),
+        (time_seconds / 60) % 60,
+        time_seconds % 60,
+    )
 }
 
 fn timer(args: &mut Vec<String>) -> TimeResult {

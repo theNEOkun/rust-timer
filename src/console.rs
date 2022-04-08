@@ -1,32 +1,29 @@
 use std::{
-    io::{
-        BufWriter,
-        Write,
-        Stdout
-    },
-    time::Instant
+    io::{BufWriter, Stdout, Write},
+    time::Instant,
 };
 
 pub struct Console {
-    handle: BufWriter<Stdout>
+    handle: BufWriter<Stdout>,
 }
 
 impl Console {
     pub fn new(stdout: Stdout) -> Self {
         Console {
-            handle: BufWriter::new(stdout)
+            handle: BufWriter::new(stdout),
         }
     }
 
     //Meant to print line by line
     pub fn write_line(&mut self, line: String) {
-        writeln!(self.handle, "{esc}c{line}", esc=27 as char).expect("Message did not get through");
+        writeln!(self.handle, "{esc}c{line}", esc = 27 as char)
+            .expect("Message did not get through");
         self.handle.flush().expect("Flush didn't work");
     }
 
     //Meant to print the ascii chars
     pub fn write_ascii(&mut self, ascii: Vec<String>) {
-        write!(self.handle, "{esc}c", esc=27 as char).expect("Didn't work to clean the screen");
+        write!(self.handle, "{esc}c", esc = 27 as char).expect("Didn't work to clean the screen");
         for each in ascii {
             writeln!(self.handle, "{each}").expect("Message did not get through");
         }

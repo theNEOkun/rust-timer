@@ -1,6 +1,6 @@
-use std::{ffi::OsStr, fs::File, io::BufReader, path::PathBuf};
-use rodio::{decoder::DecoderError, Decoder, OutputStream, Sink};
 use super::errors::*;
+use rodio::{decoder::DecoderError, Decoder, OutputStream, Sink};
+use std::{ffi::OsStr, fs::File, io::BufReader, path::PathBuf};
 
 pub fn play_sound(sound_pos: PathBuf) -> PlaybackResult {
     if let Ok(sound) = get_sound(&sound_pos) {
